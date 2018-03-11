@@ -145,6 +145,9 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
     Local<Value> argv[argc] = { Error, NutritionObj, Ration };
     cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
   }
+  else {
+    isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "error")));
+  }
 }
 
 void Init(Handle<Object> exports) {
