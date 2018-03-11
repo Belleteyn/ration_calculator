@@ -1,13 +1,17 @@
 {
-  "name": "ration_calculator",
+  "name": "@Belleteyn/ration_calculator",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/Belleteyn/ration_calculator",
+  "bugs": { 
+    "url" : "https://github.com/Belleteyn/ration_calculator/issues",
+    "email" : "zykovas91@gmail.com"
+  },
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "gypfile": true
 }
