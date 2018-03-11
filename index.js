@@ -28,12 +28,25 @@ const foodsArr = [
   }
 ];
 
-try {
-  addon.createFoodPlan(idealNutrition, foodsArr, function(error, nutrition, ration) {
-    console.log(`error: ${JSON.stringify(error)}`);
-    console.log(`nutrition: ${JSON.stringify(nutrition)}`);
-    console.log(`ration: ${JSON.stringify(ration)}`);
-  }); 
-} catch (error) {
-  console.error(error);
+let calculateRation = (idealNutrition, foodsArr) => {
+  return new Promise((rslv, rjct) => {
+    try {
+      addon.createFoodPlan(idealNutrition, foodsArr, function(error, nutrition, ration) {
+        rslv({ error, nutrition, ration });
+      }); 
+    } catch (error) {
+      console.error(error);
+      rjct(error);
+    }
+  });
 }
+
+calculateRation(idealNutrition, foodsArr)
+.then(res => {
+  console.log(res.error);
+  console.log(res.nutrition);
+  console.log(res.ration);
+})
+.catch(err => {
+  console.log(err);
+});
