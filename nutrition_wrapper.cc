@@ -88,17 +88,17 @@ namespace GIMapPrivate {
 void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
   
-  if (args.Length() != 3) {
+  if (args.Length() != 2) {
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
     return;
   }
 
-  if (!args[0]->IsObject() || !args[1]->IsArray() || !args[2]->IsFunction()) {
+  if (!args[0]->IsObject() || !args[1]->IsArray()) {
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong type of arguments")));
     return;
   }
 
-  HandleScope handle_scope(isolate);
+  HandleScope scope(isolate);
   
   Local<Context> context = isolate->GetCurrentContext();
   Local<Object> idealNutritionObj = args[0]->ToObject(context).ToLocalChecked();
@@ -108,7 +108,6 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
   const Nutrition idealNutrition = parse(idealNutritionObj, isolate, context);
   const GIMap giMap = GIMapPrivate::parse(foodsArr, isolate, context);
 
-  Local<Function> cb = Local<Function>::Cast(args[2]);
   Local<Object> Error = Object::New(isolate);
   Local<Object> NutritionObj = Object::New(isolate);
   Local<Array> Ration = Array::New(isolate);
@@ -141,9 +140,12 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
 
   bool res = NutritionAnalyzer::createDailyNutritionPlan(giMap, idealNutrition, allowedNutritionOverheading, callback);
   if (res) {
-    const unsigned argc = 3;
-    Local<Value> argv[argc] = { Error, NutritionObj, Ration };
-    cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+    Local<Object> ret = Object::New(isolate);
+    ret->Set(String::NewFromUtf8(isolate, "error"), Error);
+    ret->Set(String::NewFromUtf8(isolate, "nutrition"), NutritionObj);
+    ret->Set(String::NewFromUtf8(isolate, "ration"), Ration);
+
+    args.GetReturnValue().Set(ret);
   }
   else {
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "error")));

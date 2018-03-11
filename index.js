@@ -10,7 +10,7 @@ const idealNutrition = {
 const foodsArr = [
   {
     food: {
-      id: "food",
+      _id: "food",
       nutrition: {
         proteins: 20,
         carbs: 30,
@@ -31,9 +31,8 @@ const foodsArr = [
 let calculateRation = (idealNutrition, foodsArr) => {
   return new Promise((rslv, rjct) => {
     try {
-      addon.createFoodPlan(idealNutrition, foodsArr, function(error, nutrition, ration) {
-        rslv({ error, nutrition, ration });
-      }); 
+      res = addon.createFoodPlan(idealNutrition, foodsArr);
+      rslv(res); 
     } catch (error) {
       console.error(error);
       rjct(error);
