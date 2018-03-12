@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "homepage": "https://github.com/Belleteyn/ration_calculator",
-  "bugs": { 
-    "url" : "https://github.com/Belleteyn/ration_calculator/issues",
-    "email" : "zykovas91@gmail.com"
+  "bugs": {
+    "url": "https://github.com/Belleteyn/ration_calculator/issues",
+    "email": "zykovas91@gmail.com"
   },
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node test.js"
   },
   "author": "",
   "license": "GPL-3.0",
