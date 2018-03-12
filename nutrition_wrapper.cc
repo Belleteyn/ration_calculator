@@ -11,6 +11,27 @@ using namespace v8;
 using GIPair = std::pair<int16_t, FoodAvailable>;
 using GIMap = std::multimap<int16_t, FoodAvailable>;
 
+/// Stringify V8 value to JSON
+/// return empty string for empty value
+std::string json_str(v8::Isolate* isolate, v8::Handle<v8::Value> value)
+{
+  if (value.IsEmpty())
+  {
+    return std::string();
+  }
+
+  v8::HandleScope scope(isolate);
+
+  v8::Local<v8::Object> json = isolate->GetCurrentContext()->
+      Global()->Get(v8::String::NewFromUtf8(isolate, "JSON"))->ToObject();
+  v8::Local<v8::Function> stringify = json->Get(v8::String::NewFromUtf8(isolate, "stringify")).As<v8::Function>();
+
+  v8::Local<v8::Value> result = stringify->Call(json, 1, &value);
+  v8::String::Utf8Value const str(result);
+
+  return std::string(*str, str.length());
+}
+
 Nutrition parse(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context) {
   static const Local<String> caloriesKey = String::NewFromUtf8(isolate, "calories");
   static const Local<String> proteinsKey = String::NewFromUtf8(isolate, "proteins");
