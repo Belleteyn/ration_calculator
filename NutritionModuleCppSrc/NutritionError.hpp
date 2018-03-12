@@ -33,15 +33,15 @@ struct NutritionError
     carbsErr = 1 - actual.carbs / ideal.carbs;
     fatsErr = 1 - actual.fats / ideal.fats;
 
-    assert(kkalErr >= -1);
-    assert(proteinsErr >= -1);
-    assert(carbsErr >= -1);
-    assert(fatsErr >= -1);
+    // assert(kkalErr >= -1);
+    // assert(proteinsErr >= -1);
+    // assert(carbsErr >= -1);
+    // assert(fatsErr >= -1);
 
-    assert(kkalErr <= 1);
-    assert(proteinsErr <= 1);
-    assert(carbsErr <= 1);
-    assert(fatsErr <= 1);
+    // assert(kkalErr <= 1);
+    // assert(proteinsErr <= 1);
+    // assert(carbsErr <= 1);
+    // assert(fatsErr <= 1);
   }
 
   static Nutrition overheading(const Nutrition& ideal, const Nutrition& actual)

@@ -91,7 +91,6 @@ SubTree FoodTree::createSubTree(FoodAvailable& avFood, const FoodTree::Nutrition
     std::cout << " ~ set " << food.getName() << " delta = " << avFood.deltaPortion << "\n";
   }
 
-
   setPortion(food, portion, daily.maxDailyPortion, avFood.maxWeightAvailable);
   auto node = createNode(food, overheadingComparator);
   if (!node)

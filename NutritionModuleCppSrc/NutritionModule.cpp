@@ -11,7 +11,7 @@ namespace NutritionAnalyzer
     for (auto iter = giMap.begin(); iter != giMap.end(); ++iter)
     {
       auto foodAvailable = iter->second;
-      //std::cout << "available " << foodAvailable.maxWeightAvailable << " of " << foodAvailable.food.getName() << std::endl;
+      std::cout << "available " << foodAvailable.maxWeightAvailable << " of " << foodAvailable.food.getName() << std::endl;
 
       auto sub = tree.createSubTree(foodAvailable, overheadingComparator);
       if (sub.size() > 0)
@@ -36,7 +36,7 @@ namespace NutritionAnalyzer
     auto overheadingComparator = [idealNutrition, &allowedNutritionOverheading](const Nutrition& nutrition) -> bool
     {
       auto overheading = NutritionError::overheading(idealNutrition, nutrition);
-
+  
       return overheading.carbs < allowedNutritionOverheading.carbs
           && overheading.proteins < allowedNutritionOverheading.proteins
           && overheading.fats < allowedNutritionOverheading.fats
@@ -60,7 +60,7 @@ namespace NutritionAnalyzer
     auto tree = prepareFoodTree(giMap, overheadingComparator);
     auto rationList = tree.depthSearch(allowedErrorComparator, overheadingComparator);
 
-    //std::cout << "ration variants: " << rationList.size() << std::endl;
+    std::cout << "ration variants: " << rationList.size() << std::endl;
 
     FoodTree::Ration* minErrorRation = nullptr;
     Nutrition minErrorNutrition(0, 0, 0, 0);
