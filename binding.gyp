@@ -1,8 +1,4 @@
 {
-  'make_global_settings': [
-    ['CXX','/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++'],
-    ['LINK','/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++'],
-  ],
   "targets": [
     {
       "target_name": "ration_calculator",
