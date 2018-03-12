@@ -32,17 +32,19 @@ std::string json_str(v8::Isolate* isolate, v8::Handle<v8::Value> value)
   return std::string(*str, str.length());
 }
 
-Nutrition parse(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context) {
-  static const Local<String> caloriesKey = String::NewFromUtf8(isolate, "calories");
-  static const Local<String> proteinsKey = String::NewFromUtf8(isolate, "proteins");
-  static const Local<String> carbsKey = String::NewFromUtf8(isolate, "carbs");
-  static const Local<String> fatsKey = String::NewFromUtf8(isolate, "fats");
-  static const Local<String> totalKey = String::NewFromUtf8(isolate, "total");
+Nutrition parse(Isolate* isolate, const Local<Object>& obj) {
+  Local<Context> context = isolate->GetCurrentContext();
 
+  const Local<String> caloriesKey = String::NewFromUtf8(isolate, "calories");
+  const Local<String> proteinsKey = String::NewFromUtf8(isolate, "proteins");
+  const Local<String> carbsKey = String::NewFromUtf8(isolate, "carbs");
+  const Local<String> fatsKey = String::NewFromUtf8(isolate, "fats");
+  const Local<String> totalKey = String::NewFromUtf8(isolate, "total");
+  
   Local<Object> caloriesObj = Local<Object>::Cast(obj->Get(context, caloriesKey).ToLocalChecked());
   Local<Object> carbsObj = Local<Object>::Cast(obj->Get(context, carbsKey).ToLocalChecked());
   Local<Object> fatsObj = Local<Object>::Cast(obj->Get(context, fatsKey).ToLocalChecked());
-
+  
   int calories = 0, proteins = 0, fats = 0, carbs = 0;  
   if (!caloriesObj->IsUndefined()) {
     Local<Value> caloriesVal = caloriesObj->Get(context, totalKey).ToLocalChecked();
@@ -71,16 +73,17 @@ Nutrition parse(const Local<Object>& obj, Isolate* isolate, const Local<Context>
 
 namespace GIMapPrivate {
 
-  FoodAvailable::Daily parseDaily(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context, const int maxAvail)
+  FoodAvailable::Daily parseDaily(Isolate* isolate, const Local<Object>& obj, const int maxAvail)
   {
     if (obj.IsEmpty() || obj->IsUndefined())
     {
       return FoodAvailable::Daily(maxAvail, 0, 0);
     }
 
-    static const Local<String> maxKey = String::NewFromUtf8(isolate, "max");
-    static const Local<String> minKey = String::NewFromUtf8(isolate, "min");
+    const Local<String> maxKey = String::NewFromUtf8(isolate, "max");
+    const Local<String> minKey = String::NewFromUtf8(isolate, "min");
     
+    Local<Context> context = isolate->GetCurrentContext();
     Local<Value> maxVal = obj->Get(context, maxKey).ToLocalChecked();
     Local<Value> minVal = obj->Get(context, minKey).ToLocalChecked();
 
@@ -94,20 +97,22 @@ namespace GIMapPrivate {
     return FoodAvailable::Daily(max, 0, min);
   }
 
-  GIMap parse(const Local<Array>& array, Isolate* isolate, const Local<Context>& context) 
+  GIMap parse(Isolate* isolate, const Local<Array>& array) 
   {
     GIMap map;
     
     size_t arrLength = array->Length();
 
-    static const Local<String> availKey = String::NewFromUtf8(isolate, "available");
-    static const Local<String> deltaKey = String::NewFromUtf8(isolate, "delta");
-    static const Local<String> dailyKey = String::NewFromUtf8(isolate, "daily");
-    static const Local<String> foodKey = String::NewFromUtf8(isolate, "food");
+    const Local<String> availKey = String::NewFromUtf8(isolate, "available");
+    const Local<String> deltaKey = String::NewFromUtf8(isolate, "delta");
+    const Local<String> dailyKey = String::NewFromUtf8(isolate, "daily");
+    const Local<String> foodKey = String::NewFromUtf8(isolate, "food");
+    
+    const Local<String> giKey = String::NewFromUtf8(isolate, "glycemicIndex");
+    const Local<String> idKey = String::NewFromUtf8(isolate, "_id");
+    const Local<String> nutritionKey = String::NewFromUtf8(isolate, "nutrition");
 
-    static const Local<String> giKey = String::NewFromUtf8(isolate, "glycemicIndex");
-    static const Local<String> idKey = String::NewFromUtf8(isolate, "_id");
-    static const Local<String> nutritionKey = String::NewFromUtf8(isolate, "nutrition");
+    Local<Context> context = isolate->GetCurrentContext();
 
     for (unsigned int i = 0; i < arrLength; i++ ) {
       try {  
@@ -138,7 +143,7 @@ namespace GIMapPrivate {
           continue;
         }
 
-        Nutrition nutrition = ::parse(nutritionObj, isolate, context);
+        Nutrition nutrition = ::parse(isolate, nutritionObj);
 
         int gi = 0, avail = 0, delta = 0;
         if (giVal->IsNumber())
@@ -153,7 +158,7 @@ namespace GIMapPrivate {
         GIPair pair = GIPair(gi
           , FoodAvailable(Food(idStr, nutrition.proteins, nutrition.carbs, nutrition.fats, nutrition.kkal)
             , avail, delta
-            , parseDaily(dailyVal, isolate, context, avail)
+            , parseDaily(isolate, dailyVal, avail)
           )
         );
 
@@ -191,13 +196,12 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  Local<Context> context = isolate->GetCurrentContext();
-  Local<Object> idealNutritionObj = args[0]->ToObject(context).ToLocalChecked();
+  Local<Object> idealNutritionObj = Local<Object>::Cast(args[0]);
   Local<Array> foodsArr = Local<Array>::Cast(args[1]);
-
+  
   static const Nutrition allowedNutritionOverheading(0.5, 0.5, 0.3, 0.1);
-  const Nutrition idealNutrition = parse(idealNutritionObj, isolate, context);
-  const GIMap giMap = GIMapPrivate::parse(foodsArr, isolate, context);
+  const Nutrition idealNutrition = parse(isolate, idealNutritionObj);
+  const GIMap giMap = GIMapPrivate::parse(isolate, foodsArr);
   
   Local<Object> ret = Object::New(isolate);
   Local<Object> Error = Object::New(isolate);
