@@ -382,6 +382,96 @@ const brokenFoodsArr = [
     },
     delta: 110
   },
+  { //undef daily, undef delta
+    food:
+    { _id: '5aa69fecd3089f2de5190272',
+      name: 'авокадо',
+      glycemicIndex: 10,
+      "nutrition" : {
+          "sodium" : 7,
+          "potassium" : 485,
+          "cholesterol" : 0,
+          "calories" : {
+              "total" : 160
+          },
+          "proteins" : 2,
+          "carbs" : {
+              "dietaryFiber" : 6.7,
+              "total" : 8.53,
+              "sugars" : 0.66
+          },
+          "fats" : {
+              "total" : 14.66,
+              "saturated" : 2.126,
+              "polyunsaturated" : 1.816,
+              "monounsaturated" : 9.799
+          }
+      }
+    },
+    available: 270,
+    delta: undefined,
+    daily: undefined 
+  },
+  { //undef daily
+    food:
+    { _id: '5aa6a000d3089f2de519027a',
+      name: 'банан',
+      glycemicIndex: 65,
+      "nutrition" : {
+            "sodium" : 1,
+            "potassium" : 358,
+            "cholesterol" : 0,
+            "calories" : {
+                "total" : 89
+            },
+            "proteins" : 1.09,
+            "carbs" : {
+                "dietaryFiber" : 2.6,
+                "total" : 22.84,
+                "sugars" : 12.23
+            },
+            "fats" : {
+                "total" : 0.33,
+                "saturated" : 0.112,
+                "polyunsaturated" : 0.073,
+                "monounsaturated" : 0.032
+            }
+        }
+    },
+   available: 360,
+   delta: 120,
+   daily: undefined 
+  },
+  { food:
+    { _id: '5aa69fd4d3089f2de5190266',
+      name: 'льняное масло',
+      glycemicIndex: 0,
+      "nutrition" : {
+          "sodium" : 0,
+          "potassium" : 0,
+          "cholesterol" : 0,
+          "calories" : {
+              "total" : 120,
+              "fromFat" : 120
+          },
+          "proteins" : 0,
+          "carbs" : {
+              "dietaryFiber" : 0,
+              "total" : 0,
+              "sugars" : 0
+          },
+          "fats" : {
+              "total" : 13.6,
+              "saturated" : 1.278,
+              "polyunsaturated" : 8.976,
+              "monounsaturated" : 2.747
+          }
+      }
+    },
+    available: 170,
+    delta: 5,
+    daily: { min: 5, max: 15 } 
+  },
 ];
 
 let calculateRation = (idealNutrition, foodsArr) => {
@@ -396,6 +486,14 @@ let calculateRation = (idealNutrition, foodsArr) => {
     }
   });
 }
+
+calculateRation(idealNutrition, brokenFoodsArr)
+.then(res => {
+  console.log(res);
+})
+.catch(err => {
+  console.log(err);
+});
 
 calculateRation(idealNutrition, brokenFoodsArr)
 .then(res => {
