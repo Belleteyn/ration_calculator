@@ -37,40 +37,61 @@ Nutrition parse(const Local<Object>& obj, Isolate* isolate, const Local<Context>
   static const Local<String> proteinsKey = String::NewFromUtf8(isolate, "proteins");
   static const Local<String> carbsKey = String::NewFromUtf8(isolate, "carbs");
   static const Local<String> fatsKey = String::NewFromUtf8(isolate, "fats");
-  
-  Local<Value> caloriesVal = obj->Get(context, caloriesKey).ToLocalChecked();
-  Local<Value> proteinsVal = obj->Get(context, proteinsKey).ToLocalChecked();
-  Local<Value> carbsVal = obj->Get(context, carbsKey).ToLocalChecked();
-  Local<Value> fatsVal = obj->Get(context, fatsKey).ToLocalChecked();
+  static const Local<String> totalKey = String::NewFromUtf8(isolate, "total");
 
-  return Nutrition(caloriesVal->NumberValue(), proteinsVal->NumberValue(), carbsVal->NumberValue(), fatsVal->NumberValue());
+  Local<Object> caloriesObj = Local<Object>::Cast(obj->Get(context, caloriesKey).ToLocalChecked());
+  Local<Object> carbsObj = Local<Object>::Cast(obj->Get(context, carbsKey).ToLocalChecked());
+  Local<Object> fatsObj = Local<Object>::Cast(obj->Get(context, fatsKey).ToLocalChecked());
+
+  int calories = 0, proteins = 0, fats = 0, carbs = 0;  
+  if (!caloriesObj->IsUndefined()) {
+    Local<Value> caloriesVal = caloriesObj->Get(context, totalKey).ToLocalChecked();
+    if (caloriesVal->IsNumber())
+      calories = caloriesVal->NumberValue();
+  }
+  
+  if (!carbsObj->IsUndefined()) {
+    Local<Value> carbsVal = carbsObj->Get(context, totalKey).ToLocalChecked();
+    if (carbsVal->IsNumber())
+      carbs = carbsVal->NumberValue();
+  }
+  
+  if (!fatsObj->IsUndefined()) {
+    Local<Value> fatsVal = fatsObj->Get(context, totalKey).ToLocalChecked();
+    if (fatsVal->IsNumber())
+      fats = fatsVal->NumberValue();
+  }
+
+  Local<Value> proteinsVal = obj->Get(context, proteinsKey).ToLocalChecked();
+  if (proteinsVal->IsNumber())
+    proteins = proteinsVal->NumberValue();
+  
+  return Nutrition(calories, proteins, carbs, fats);
 }
 
 namespace GIMapPrivate {
 
-  FoodAvailable::Daily parseDaily(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context)
+  FoodAvailable::Daily parseDaily(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context, const int maxAvail)
   {
+    if (obj.IsEmpty() || obj->IsUndefined())
+    {
+      return FoodAvailable::Daily(maxAvail, 0, 0);
+    }
+
     static const Local<String> maxKey = String::NewFromUtf8(isolate, "max");
     static const Local<String> minKey = String::NewFromUtf8(isolate, "min");
     
     Local<Value> maxVal = obj->Get(context, maxKey).ToLocalChecked();
     Local<Value> minVal = obj->Get(context, minKey).ToLocalChecked();
 
-    return FoodAvailable::Daily(maxVal->NumberValue(), 0, minVal->NumberValue());
-  }
+    int min = 0, max = maxAvail;
+    if (minVal->IsNumber())
+      min = minVal->NumberValue();
 
-  Food parseFood(const Local<Object>& obj, Isolate* isolate, const Local<Context>& context)
-  {
-    static const Local<String> idKey = String::NewFromUtf8(isolate, "_id");
-    static const Local<String> nutritionKey = String::NewFromUtf8(isolate, "nutrition");
-    
-    Local<Value> idVal = obj->Get(context, idKey).ToLocalChecked();
-    Local<Object> nutritionObj = obj->Get(context, nutritionKey).ToLocalChecked()->ToObject();
-    
-    std::string idStr(*String::Utf8Value(idVal));
-    Nutrition nutrition = parse(nutritionObj, isolate, context);
+    if (maxVal->IsNumber())
+      max = maxVal->NumberValue();
 
-    return Food(idStr, nutrition.proteins, nutrition.carbs, nutrition.fats, nutrition.kkal);
+    return FoodAvailable::Daily(max, 0, min);
   }
 
   GIMap parse(const Local<Array>& array, Isolate* isolate, const Local<Context>& context) 
@@ -83,32 +104,83 @@ namespace GIMapPrivate {
     static const Local<String> deltaKey = String::NewFromUtf8(isolate, "delta");
     static const Local<String> dailyKey = String::NewFromUtf8(isolate, "daily");
     static const Local<String> foodKey = String::NewFromUtf8(isolate, "food");
+
     static const Local<String> giKey = String::NewFromUtf8(isolate, "glycemicIndex");
-    
+    static const Local<String> idKey = String::NewFromUtf8(isolate, "_id");
+    static const Local<String> nutritionKey = String::NewFromUtf8(isolate, "nutrition");
+
     for (unsigned int i = 0; i < arrLength; i++ ) {
-      Local<Object> v = array->Get(i)->ToObject();
-      
-      Local<Value> availVal = v->Get(context, availKey).ToLocalChecked();
-      Local<Value> deltaVal = v->Get(context, deltaKey).ToLocalChecked();
-      Local<Object> dailyVal = v->Get(context, dailyKey).ToLocalChecked()->ToObject();
-      Local<Object> foodVal = v->Get(context, foodKey).ToLocalChecked()->ToObject();
-      Local<Value> giVal = foodVal->Get(context, giKey).ToLocalChecked();
+      try {  
+        Local<Object> v = Local<Object>::Cast(array->Get(i));
+        
+        Local<Object> dailyVal = Local<Object>::Cast(v->Get(context, dailyKey).ToLocalChecked());
+        Local<Object> foodVal = Local<Object>::Cast(v->Get(context, foodKey).ToLocalChecked());
 
-      GIPair pair = GIPair(giVal->NumberValue()
-        , FoodAvailable(parseFood(foodVal, isolate, context)
-        , availVal->NumberValue(), deltaVal->NumberValue()
-        , parseDaily(dailyVal, isolate, context)));
+        if (foodVal.IsEmpty() || foodVal->IsUndefined() || foodVal->IsNull()) {
+          std::cout << "Error on parsing food data: empty food\n";
+          continue;
+        }
 
-      map.insert(pair);
+        Local<Value> availVal = v->Get(context, availKey).ToLocalChecked();
+        Local<Value> deltaVal = v->Get(context, deltaKey).ToLocalChecked();
+        Local<Value> giVal = foodVal->Get(context, giKey).ToLocalChecked();
+        Local<Value> idVal = foodVal->Get(context, idKey).ToLocalChecked();
+        Local<Object> nutritionObj = Local<Object>::Cast(foodVal->Get(context, nutritionKey).ToLocalChecked());
+
+        if (nutritionObj.IsEmpty() || nutritionObj->IsUndefined() || nutritionObj->IsNull()) {
+          std::cout << "Error on parsing food data: no nutrition\n";
+          continue;
+        }
+        
+        std::string idStr(*String::Utf8Value(idVal));
+        if (idStr.empty()) {
+          std::cout << "Error on parsing food data: no food id\n";
+          continue;
+        }
+
+        Nutrition nutrition = ::parse(nutritionObj, isolate, context);
+
+        int gi = 0, avail = 0, delta = 0;
+        if (giVal->IsNumber())
+          gi = giVal->NumberValue();
+        
+        if (availVal->IsNumber())
+          avail = availVal->NumberValue();
+          
+        if (deltaVal->IsNumber())
+          delta = deltaVal->NumberValue();
+
+        GIPair pair = GIPair(gi
+          , FoodAvailable(Food(idStr, nutrition.proteins, nutrition.carbs, nutrition.fats, nutrition.kkal)
+            , avail, delta
+            , parseDaily(dailyVal, isolate, context, avail)
+          )
+        );
+
+        map.insert(pair);
+      }
+      catch(const std::exception& ex) {
+        std::cout << "GIMap parse exception: " << ex.what() << std::endl;
+      }
     }
 
     return map;
   }
 }
 
+Local<Value> createRationObj(Isolate* isolate, const char* foodId, int portionMass)
+{
+  EscapableHandleScope scope(isolate);
+  Local<Object> temp = Object::New(isolate);
+  temp->Set(String::NewFromUtf8(isolate, "food"), String::NewFromUtf8(isolate, foodId));
+  temp->Set(String::NewFromUtf8(isolate, "size"), Number::New(isolate, portionMass));
+  return scope.Escape(temp);
+}
+
 void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
-  
+  HandleScope handle_scope(isolate);
+
   if (args.Length() != 2) {
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
     return;
@@ -119,8 +191,6 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  HandleScope scope(isolate);
-  
   Local<Context> context = isolate->GetCurrentContext();
   Local<Object> idealNutritionObj = args[0]->ToObject(context).ToLocalChecked();
   Local<Array> foodsArr = Local<Array>::Cast(args[1]);
@@ -128,23 +198,39 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
   static const Nutrition allowedNutritionOverheading(0.5, 0.5, 0.3, 0.1);
   const Nutrition idealNutrition = parse(idealNutritionObj, isolate, context);
   const GIMap giMap = GIMapPrivate::parse(foodsArr, isolate, context);
-
+  
+  Local<Object> ret = Object::New(isolate);
   Local<Object> Error = Object::New(isolate);
   Local<Object> NutritionObj = Object::New(isolate);
   Local<Array> Ration = Array::New(isolate);
 
-  static auto callback = [&idealNutrition, &isolate, &Error, &NutritionObj, &Ration](const FoodTree::Ration& ration
+  auto callback = [&idealNutrition, &isolate, &Error, &NutritionObj, &Ration](const FoodTree::Ration& ration
     , const Nutrition& nutrition, const NutritionError& error) 
   {  
+    std::cout << "\nration: " << ration.size() << " foods \n\n";
+    for (auto iter = ration.begin(); iter != ration.end(); ++iter)
+    {
+      std::cout << (*iter)->getName() << " -> " << (*iter)->getPortionMass() << std::endl;
+    }
+
+    std::cout << "\nSummary: Error = " << error.error() * 100 << std::endl;
+
+    std::cout << "kkal: " << nutrition.kkal << "(" << idealNutrition.kkal << ")"
+              << ", kkal error = " << error.kkalErr;
+
+    std::cout << "\np: " << nutrition.proteins << "(" << idealNutrition.proteins << ")"
+              << ", error = " << error.proteinsErr;
+
+    std::cout << "\nc: " << nutrition.carbs << "(" << idealNutrition.carbs << ")"
+              << ", error = " << error.carbsErr;
+
+    std::cout << "\nf: " << nutrition.fats << "(" << idealNutrition.fats << ")"
+              << ", error = " << error.fatsErr << std::endl << std::endl;
+
     int i = 0;
     for (auto iter = ration.begin(); iter != ration.end(); ++iter)
     {
-      Local<Object> temp = Object::New(isolate);
-      
-      temp->Set(String::NewFromUtf8(isolate, "food"), String::NewFromUtf8(isolate, (*iter)->getName()));
-      temp->Set(String::NewFromUtf8(isolate, "size"), Number::New(isolate, (*iter)->getPortionMass()));
-
-      Ration->Set(i, temp);
+      Ration->Set(i, createRationObj(isolate, (*iter)->getName(), (*iter)->getPortionMass()));
       i++;
     }
 
@@ -160,6 +246,7 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
   };
 
   bool res = NutritionAnalyzer::createDailyNutritionPlan(giMap, idealNutrition, allowedNutritionOverheading, callback);
+  
   if (res) {
     Local<Object> ret = Object::New(isolate);
     ret->Set(String::NewFromUtf8(isolate, "error"), Error);
@@ -169,7 +256,7 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
     args.GetReturnValue().Set(ret);
   }
   else {
-    isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "error")));
+    isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "ration creatoin failed: no variants")));
   }
 }
 
