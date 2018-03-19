@@ -179,7 +179,7 @@ Local<Value> createRationObj(Isolate* isolate, const char* foodId
   EscapableHandleScope scope(isolate);
   Local<Object> temp = Object::New(isolate);
   temp->Set(String::NewFromUtf8(isolate, "food"), String::NewFromUtf8(isolate, foodId));
-  temp->Set(String::NewFromUtf8(isolate, "size"), Number::New(isolate, portionMass));
+  temp->Set(String::NewFromUtf8(isolate, "portion"), Number::New(isolate, portionMass));
   temp->Set(String::NewFromUtf8(isolate, "delta"), Number::New(isolate, delta));
   return scope.Escape(temp);
 }
