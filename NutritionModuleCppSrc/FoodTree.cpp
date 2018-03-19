@@ -64,8 +64,7 @@ FoodTree::FoodTree()
   leaves_.push_back(root_);
 }
 
-FoodTree::~FoodTree()
-{}
+FoodTree::~FoodTree() {}
 
 SubTree FoodTree::createSubTree(FoodAvailable& avFood, const FoodTree::NutritionErrorComparator& overheadingComparator) const
 {
@@ -91,6 +90,7 @@ SubTree FoodTree::createSubTree(FoodAvailable& avFood, const FoodTree::Nutrition
     std::cout << " ~ set " << food.getName() << " delta = " << avFood.deltaPortion << "\n";
   }
 
+  food.setDelta(avFood.deltaPortion);
   setPortion(food, portion, daily.maxDailyPortion, avFood.maxWeightAvailable);
   auto node = createNode(food, overheadingComparator);
   if (!node)

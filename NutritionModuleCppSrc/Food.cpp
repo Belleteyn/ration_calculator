@@ -9,6 +9,7 @@ Food::Food(const std::string& name, float p, float c, float f, uint16_t k)
   , id_(std::hash<std::string>()(std::string(name)))
   , nutrition_(k, p, c, f)
   , portionMass_(0)
+  , deltaMass_(0)
   , portionNutrition_(0, 0, 0, 0)
 {
 
@@ -22,6 +23,7 @@ Food::Food(const Food& other)
                , other.nutrition_.carbs
                , other.nutrition_.fats)
   , portionMass_(other.portionMass_)
+  , deltaMass_(other.deltaMass_)
   , portionNutrition_(other.portionNutrition_.kkal
                       , other.portionNutrition_.proteins
                       , other.portionNutrition_.carbs
@@ -30,7 +32,12 @@ Food::Food(const Food& other)
 
 }
 
-void Food::setPortion(const int gram)
+void Food::setDelta(const unsigned int mass)
+{
+  deltaMass_ = mass;
+}
+
+void Food::setPortion(const unsigned int gram)
 {
   portionMass_ = gram;
 
@@ -70,6 +77,11 @@ const char* Food::getName() const
 unsigned int Food::getPortionMass() const
 {
   return portionMass_;
+}
+
+unsigned int Food::getDelta() const
+{
+  return deltaMass_;
 }
 
 const Nutrition& Food::getNutrition() const

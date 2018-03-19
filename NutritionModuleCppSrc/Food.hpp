@@ -16,13 +16,15 @@ public:
   Food(const Food& other);
   ~Food() = default;
 
-  void setPortion(const int gram);
+  void setPortion(const unsigned int gram);
+  void setDelta(const unsigned int mass);
 
   bool operator < (const Food& rhs) const;
   bool operator == (const Food& rhs) const;
 
   const char* getName() const;
   unsigned int getPortionMass() const;
+  unsigned int getDelta() const;
 
   const Nutrition& getNutrition() const;
   const Nutrition& getPortionNutrition() const;
@@ -37,7 +39,8 @@ private:
   const Nutrition nutrition_;
 
   /* portion */
-  unsigned int portionMass_ = 0;
+  unsigned int portionMass_;
+  unsigned int deltaMass_;
   Nutrition portionNutrition_;
 };
 
