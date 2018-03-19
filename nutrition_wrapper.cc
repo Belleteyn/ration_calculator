@@ -173,12 +173,14 @@ namespace GIMapPrivate {
   }
 }
 
-Local<Value> createRationObj(Isolate* isolate, const char* foodId, int portionMass)
+Local<Value> createRationObj(Isolate* isolate, const char* foodId
+  , unsigned int portionMass, unsigned int delta)
 {
   EscapableHandleScope scope(isolate);
   Local<Object> temp = Object::New(isolate);
   temp->Set(String::NewFromUtf8(isolate, "food"), String::NewFromUtf8(isolate, foodId));
   temp->Set(String::NewFromUtf8(isolate, "size"), Number::New(isolate, portionMass));
+  temp->Set(String::NewFromUtf8(isolate, "delta"), Number::New(isolate, delta));
   return scope.Escape(temp);
 }
 
@@ -234,7 +236,8 @@ void CreateFoodPlan(const FunctionCallbackInfo<Value>& args) {
     int i = 0;
     for (auto iter = ration.begin(); iter != ration.end(); ++iter)
     {
-      Ration->Set(i, createRationObj(isolate, (*iter)->getName(), (*iter)->getPortionMass()));
+      Ration->Set(i, createRationObj(isolate, (*iter)->getName()
+        , (*iter)->getPortionMass(), (*iter)->getDelta()));
       i++;
     }
 
